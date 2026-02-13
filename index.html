@@ -44,7 +44,10 @@
                 </div>
             </section>
             <section class="column" aria-label="Done">
-                <h2>Done</h2>
+                <div class="column-header">
+                    <h2>Done</h2>
+                    <button type="button" class="ghost-btn" @click="clearDone" :disabled="done.length === 0">Очистить</button>
+                </div>
                 <div class="column-body">
                     <note-card
                         v-for="card in done"

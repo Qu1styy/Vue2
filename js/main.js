@@ -144,7 +144,7 @@ new Vue({
             if (total > 0 && doneCount === total) {
                 return 'done';
             }
-            if (doneCount > 0) {
+            if (total > 0 && doneCount / total >= 0.5) {
                 return 'progress';
             }
             return 'todo';
@@ -155,6 +155,13 @@ new Vue({
             } else {
                 card.completedAt = '';
             }
+        },
+        clearDone() {
+            if (this.done.length === 0) {
+                return;
+            }
+            this.done = [];
+            this.save();
         },
         save() {
             const payload = {

@@ -40,6 +40,27 @@ body {
     font-size: 18px;
 }
 
+.column-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.ghost-btn {
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    background: #fff;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.ghost-btn:disabled {
+    color: #aaa;
+    cursor: not-allowed;
+}
+
 .column-body {
     min-height: 200px;
 }
