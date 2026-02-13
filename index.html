@@ -7,48 +7,54 @@
     <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
-    <div id="app" class="board">
-        <section class="column">
+    <div id="app" class="page">
+        <section class="form-section" aria-label="Создание карточки">
             <form class="new-card" @submit.prevent="createCard">
                 <input v-model="newCard.title" type="text" placeholder="Заголовок">
-                <input v-for="(item, index) in newCard.items" :key="index" v-model="item.text" type="text" placeholder="Пункт">
+                <div class="item-row" v-for="(item, index) in newCard.items" :key="index">
+                    <input v-model="item.text" type="text" placeholder="Пункт">
+                    <button type="button" class="icon-btn" @click="removeItem(index)" :disabled="newCard.items.length <= 3">−</button>
+                </div>
+                <button type="button" @click="addItem" :disabled="newCard.items.length >= 5">Добавить пункт</button>
                 <button type="submit" :disabled="!canCreateCard || todoLocked">Создать</button>
             </form>
         </section>
-        <section class="column" aria-label="To Do">
-            <h2>To Do</h2>
-            <div class="column-body">
-                <note-card
-                    v-for="card in todo"
-                    :key="card.id"
-                    :card="card"
-                    :disabled="todoLocked"
-                    @update="update"
-                ></note-card>
-            </div>
-        </section>
-        <section class="column" aria-label="In Progress">
-            <h2>In Progress</h2>
-            <div class="column-body">
-                <note-card
-                    v-for="card in progress"
-                    :key="card.id"
-                    :card="card"
-                    @update="update"
-                ></note-card>
-            </div>
-        </section>
-        <section class="column" aria-label="Done">
-            <h2>Done</h2>
-            <div class="column-body">
-                <note-card
-                    v-for="card in done"
-                    :key="card.id"
-                    :card="card"
-                    :disabled="true"
-                    @update="update"
-                ></note-card>
-            </div>
+        <section class="board" aria-label="Доска">
+            <section class="column" aria-label="To Do">
+                <h2>To Do</h2>
+                <div class="column-body">
+                    <note-card
+                        v-for="card in todo"
+                        :key="card.id"
+                        :card="card"
+                        :disabled="todoLocked"
+                        @update="update"
+                    ></note-card>
+                </div>
+            </section>
+            <section class="column" aria-label="In Progress">
+                <h2>In Progress</h2>
+                <div class="column-body">
+                    <note-card
+                        v-for="card in progress"
+                        :key="card.id"
+                        :card="card"
+                        @update="update"
+                    ></note-card>
+                </div>
+            </section>
+            <section class="column" aria-label="Done">
+                <h2>Done</h2>
+                <div class="column-body">
+                    <note-card
+                        v-for="card in done"
+                        :key="card.id"
+                        :card="card"
+                        :disabled="true"
+                        @update="update"
+                    ></note-card>
+                </div>
+            </section>
         </section>
     </div>
     <script src="js/vue.js"></script>

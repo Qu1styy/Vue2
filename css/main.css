@@ -9,13 +9,22 @@ body {
     color: #222;
 }
 
+.page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px;
+}
+
+.form-section {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 24px;
+}
+
 .board {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 16px;
-    padding: 24px;
-    max-width: 1200px;
-    margin: 0 auto;
 }
 
 .column {
@@ -38,7 +47,8 @@ body {
 .new-card {
     display: grid;
     gap: 8px;
-    margin-bottom: 16px;
+    width: 100%;
+    max-width: 420px;
 }
 
 .new-card input {
@@ -46,6 +56,29 @@ body {
     border: 1px solid #ddd;
     border-radius: 6px;
     font-size: 14px;
+}
+
+.item-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+    align-items: center;
+}
+
+.icon-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    background: #fff;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.icon-btn:disabled {
+    color: #aaa;
+    cursor: not-allowed;
 }
 
 .new-card button {

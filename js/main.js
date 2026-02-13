@@ -76,6 +76,18 @@ new Vue({
         }
     },
     methods: {
+        addItem() {
+            if (this.newCard.items.length >= 5) {
+                return;
+            }
+            this.newCard.items.push({ text: '', done: false });
+        },
+        removeItem(index) {
+            if (this.newCard.items.length <= 3) {
+                return;
+            }
+            this.newCard.items.splice(index, 1);
+        },
         createCard() {
             if (!this.canCreateCard) {
                 return;
