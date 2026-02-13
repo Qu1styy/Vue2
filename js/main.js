@@ -11,7 +11,9 @@ Vue.component('note-card', {
     },
     methods: {
         emitUpdate() {
-            this.$emit('update', this.card);
+            if (!this.disabled) {
+                this.$emit('update');
+            }
         }
     },
     template: `
@@ -98,13 +100,11 @@ new Vue({
             const card = {
                 id: Date.now(),
                 title: this.newCard.title.trim(),
-                items: this.newCard.items
-                    .filter((item) => item.text && item.text.trim().length > 0)
-                    .map((item) => ({
-                        text: item.text.trim(),
-                        done: false
-                    })),
-                completedAt: ''
+                items: this.newCard.items.map((item) => ({
+                    text: item.text.trim(),
+                    done: false
+                })),
+                completedAt: null
             };
             this.todo.push(card);
             this.newCard = {
@@ -117,58 +117,48 @@ new Vue({
             };
             this.save();
         },
-        update(card) {
-            let target = this.progressStage(card);
-            if (card.stage === 'done') {
-                target = 'done';
-            } else if (card.stage === 'progress' && target === 'todo') {
-                target = 'progress';
-            }
-            this.moveCards(card, target);
-            this.finish(card, target);
+        update() {
+            this.moveCards();
             this.save();
         },
-        moveCards(card, target) {
-            const lists = [this.todo, this.progress, this.done];
-            lists.forEach((list) => {
-                const index = list.findIndex((c) => c.id === card.id);
-                if (index !== -1) {
-                    list.splice(index, 1);
+        moveCards() {
+            this.todo = this.todo.filter((card) => {
+                const p = this.getProgress(card);
+                if (p === 1) {
+                    this.finish(card);
+                    this.done.push(card);
+                    return false;
                 }
+                if (p > 0.5 && this.progress.length < 5) {
+                    this.progress.push(card);
+                    return false;
+                }
+                return true;
             });
-            if (target === 'todo') {
-                card.stage = 'todo';
-                this.todo.push(card);
-                return;
-            }
-            if (target === 'progress') {
-                card.stage = 'progress';
-                this.progress.push(card);
-                return;
-            }
-            card.stage = 'done';
-            this.done.push(card);
+
+            this.progress = this.progress.filter((card) => {
+                if (this.getProgress(card) === 1) {
+                    this.finish(card);
+                    this.done.push(card);
+                    return false;
+                }
+                return true;
+            });
         },
-        progressStage(card) {
-            const total = card.items.length;
-            const doneCount = card.items.filter((item) => item.done).length;
-            if (total > 0 && doneCount === total) {
-                return 'done';
+        getProgress(card) {
+            if (!card.items.length) {
+                return 0;
             }
-            if (total > 0 && doneCount / total >= 0.5) {
-                return 'progress';
-            }
-            return 'todo';
+            return card.items.filter((item) => item.done).length / card.items.length;
         },
-        finish(card, target) {
-            if (target === 'done') {
-                card.completedAt = new Date().toLocaleDateString();
-            } else {
-                card.completedAt = '';
-            }
+        finish(card) {
+            card.completedAt = new Date().toLocaleString();
         },
         clearDone() {
             if (this.done.length === 0) {
+                return;
+            }
+            if (!confirm('Очистить выполненное?')) {
                 return;
             }
             this.done = [];
