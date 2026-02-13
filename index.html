@@ -8,17 +8,47 @@
 </head>
 <body>
     <div id="app" class="board">
+        <section class="column">
+            <form class="new-card" @submit.prevent="createCard">
+                <input v-model="newCard.title" type="text" placeholder="Заголовок">
+                <input v-for="(item, index) in newCard.items" :key="index" v-model="item.text" type="text" placeholder="Пункт">
+                <button type="submit" :disabled="!canCreateCard || todoLocked">Создать</button>
+            </form>
+        </section>
         <section class="column" aria-label="To Do">
             <h2>To Do</h2>
-            <div class="column-body"></div>
+            <div class="column-body">
+                <note-card
+                    v-for="card in todo"
+                    :key="card.id"
+                    :card="card"
+                    :disabled="todoLocked"
+                    @update="update"
+                ></note-card>
+            </div>
         </section>
         <section class="column" aria-label="In Progress">
             <h2>In Progress</h2>
-            <div class="column-body"></div>
+            <div class="column-body">
+                <note-card
+                    v-for="card in progress"
+                    :key="card.id"
+                    :card="card"
+                    @update="update"
+                ></note-card>
+            </div>
         </section>
         <section class="column" aria-label="Done">
             <h2>Done</h2>
-            <div class="column-body"></div>
+            <div class="column-body">
+                <note-card
+                    v-for="card in done"
+                    :key="card.id"
+                    :card="card"
+                    :disabled="true"
+                    @update="update"
+                ></note-card>
+            </div>
         </section>
     </div>
     <script src="js/vue.js"></script>

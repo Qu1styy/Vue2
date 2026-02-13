@@ -35,6 +35,58 @@ body {
     min-height: 200px;
 }
 
+.new-card {
+    display: grid;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.new-card input {
+    padding: 8px 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.new-card button {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    background: #2b6cb0;
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.new-card button:disabled {
+    background: #9bb7d6;
+    cursor: not-allowed;
+}
+
+.note-card {
+    border: 1px solid #e6e6e6;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 12px;
+    background: #fafafa;
+}
+
+.note-card h3 {
+    margin: 0 0 8px;
+    font-size: 16px;
+}
+
+.note-card ul {
+    margin: 0;
+    padding-left: 16px;
+}
+
+.note-card-date {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #666;
+}
+
 @media (max-width: 900px) {
     .board {
         grid-template-columns: 1fr;
