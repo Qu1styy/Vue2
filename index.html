@@ -1,10 +1,27 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kanban Board</title>
+    <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
-$END$
+    <div id="app" class="board">
+        <section class="column" aria-label="To Do">
+            <h2>To Do</h2>
+            <div class="column-body"></div>
+        </section>
+        <section class="column" aria-label="In Progress">
+            <h2>In Progress</h2>
+            <div class="column-body"></div>
+        </section>
+        <section class="column" aria-label="Done">
+            <h2>Done</h2>
+            <div class="column-body"></div>
+        </section>
+    </div>
+    <script src="js/vue.js"></script>
+    <script src="js/main.js"></script>
 </body>
 </html>
