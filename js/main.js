@@ -15,23 +15,26 @@ Vue.component('note-card', {
         }
     },
     template: `
-        <article class="note-card">
-            <h3>{{ card.title }}</h3>
-            <ul>
-                <li v-for="(item, index) in card.items" :key="index">
-                    <label>
-                        <input
-                            type="checkbox"
-                            v-model="item.done"
-                            :disabled="disabled"
-                            @change="emitUpdate"
-                        >
-                        {{ item.text }}
-                    </label>
-                </li>
-            </ul>
-            <div v-if="card.completedAt" class="note-card-date">
-                Дата завершения: {{ card.completedAt }}
+        <article class="card mb-3">
+            <div class="card-body">
+                <h3 class="h6 card-title mb-2">{{ card.title }}</h3>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item px-0" v-for="(item, index) in card.items" :key="index">
+                        <label class="form-check m-0">
+                            <input
+                                class="form-check-input me-2"
+                                type="checkbox"
+                                v-model="item.done"
+                                :disabled="disabled"
+                                @change="emitUpdate"
+                            >
+                            <span class="form-check-label">{{ item.text }}</span>
+                        </label>
+                    </li>
+                </ul>
+                <div v-if="card.completedAt" class="text-muted small mt-2">
+                    Дата завершения: {{ card.completedAt }}
+                </div>
             </div>
         </article>
     `
@@ -115,7 +118,12 @@ new Vue({
             this.save();
         },
         update(card) {
-            const target = this.progressStage(card);
+            let target = this.progressStage(card);
+            if (card.stage === 'done') {
+                target = 'done';
+            } else if (card.stage === 'progress' && target === 'todo') {
+                target = 'progress';
+            }
             this.moveCards(card, target);
             this.finish(card, target);
             this.save();
@@ -129,13 +137,16 @@ new Vue({
                 }
             });
             if (target === 'todo') {
+                card.stage = 'todo';
                 this.todo.push(card);
                 return;
             }
             if (target === 'progress') {
+                card.stage = 'progress';
                 this.progress.push(card);
                 return;
             }
+            card.stage = 'done';
             this.done.push(card);
         },
         progressStage(card) {
