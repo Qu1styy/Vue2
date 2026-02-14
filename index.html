@@ -52,6 +52,7 @@
                         v-for="card in progress"
                         :key="card.id"
                         :card="card"
+                        :lock-checked="true"
                         @update="update"
                     ></note-card>
                 </div>

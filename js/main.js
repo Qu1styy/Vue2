@@ -7,6 +7,10 @@ Vue.component('note-card', {
         disabled: {
             type: Boolean,
             default: false
+        },
+        lockChecked: {
+            type: Boolean,
+            default: false
         }
     },
     methods: {
@@ -27,7 +31,7 @@ Vue.component('note-card', {
                                 class="form-check-input me-2"
                                 type="checkbox"
                                 v-model="item.done"
-                                :disabled="disabled"
+                                :disabled="disabled || (lockChecked && item.done)"
                                 @change="emitUpdate"
                             >
                             <span class="form-check-label">{{ item.text }}</span>
@@ -77,7 +81,7 @@ new Vue({
             const filledItems = this.newCard.items.filter(
                 (item) => item.text && item.text.trim().length > 0
             ).length;
-            return filledItems >= 3 && filledItems <= 5;
+            return filledItems >= 3 && filledItems <= 5 && filledItems === this.newCard.items.length;
         }
     },
     methods: {
@@ -129,7 +133,7 @@ new Vue({
                     this.done.push(card);
                     return false;
                 }
-                if (p > 0.5 && this.progress.length < 5) {
+                if (p >= 0.5 && this.progress.length < 5) {
                     this.progress.push(card);
                     return false;
                 }
