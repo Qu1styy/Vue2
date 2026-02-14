@@ -109,8 +109,8 @@ Vue.component('create-card', {
                         </div>
                     </div>
                     <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-outline-primary" @click="addItem" :disabled="items.length >= 5">Добавить пункт</button>
                         <button type="submit" class="btn btn-primary" :disabled="!canCreate">Создать</button>
+                        <button type="button" class="btn btn-outline-primary" @click="addItem" :disabled="items.length >= 5">Добавить пункт</button>
                     </div>
                 </form>
             </div>
