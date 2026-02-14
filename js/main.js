@@ -14,14 +14,14 @@ Vue.component('note-card', {
         }
     },
     methods: {
-        emitUpdate() {
+        onChange() {
             if (!this.disabled) {
                 this.$emit('update');
             }
         }
     },
     template: `
-        <article class="card mb-3">
+        <div class="card">
             <div class="card-body">
                 <h3 class="h6 card-title mb-2">{{ card.title }}</h3>
                 <ul class="list-group list-group-flush">
@@ -32,93 +32,178 @@ Vue.component('note-card', {
                                 type="checkbox"
                                 v-model="item.done"
                                 :disabled="disabled || (lockChecked && item.done)"
-                                @change="emitUpdate"
+                                @change="onChange"
                             >
                             <span class="form-check-label">{{ item.text }}</span>
                         </label>
                     </li>
                 </ul>
-                <div v-if="card.completedAt" class="text-muted small mt-2">
-                    Дата завершения: {{ card.completedAt }}
-                </div>
+                <small v-if="card.completedAt" class="text-muted d-block mt-2">Completed: {{ card.completedAt }}</small>
             </div>
-        </article>
+        </div>
+    `
+});
+
+Vue.component('create-card', {
+    data() {
+        return {
+            title: '',
+            items: [
+                { text: '', done: false },
+                { text: '', done: false },
+                { text: '', done: false }
+            ]
+        };
+    },
+    computed: {
+        canCreate() {
+            if (!this.title.trim()) {
+                return false;
+            }
+            const filled = this.items.filter((item) => item.text && item.text.trim().length > 0).length;
+            return filled >= 3 && filled <= 5 && filled === this.items.length;
+        }
+    },
+    methods: {
+        addItem() {
+            if (this.items.length < 5) {
+                this.items.push({ text: '', done: false });
+            }
+        },
+        removeItem(index) {
+            if (this.items.length > 3) {
+                this.items.splice(index, 1);
+            }
+        },
+        create() {
+            if (!this.canCreate) {
+                return;
+            }
+            const payload = {
+                title: this.title.trim(),
+                items: this.items.map((item) => ({
+                    text: item.text.trim(),
+                    done: false
+                }))
+            };
+            this.$emit('create', payload);
+            this.title = '';
+            this.items = [
+                { text: '', done: false },
+                { text: '', done: false },
+                { text: '', done: false }
+            ];
+        }
+    },
+    template: `
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-8 col-lg-6">
+                <form class="create-card" @submit.prevent="create">
+                    <div class="mb-2">
+                        <input v-model="title" type="text" class="form-control" placeholder="Заголовок">
+                    </div>
+                    <div class="mb-2" v-for="(item, index) in items" :key="index">
+                        <div class="input-group">
+                            <input v-model="item.text" type="text" class="form-control" placeholder="Пункт">
+                            <button type="button" class="btn btn-outline-secondary" @click="removeItem(index)" :disabled="items.length <= 3">−</button>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-outline-primary" @click="addItem" :disabled="items.length >= 5">Добавить пункт</button>
+                        <button type="submit" class="btn btn-primary" :disabled="!canCreate">Создать</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `
+});
+
+Vue.component('board-column', {
+    props: {
+        title: {
+            type: String,
+            required: true
+        },
+        cards: {
+            type: Array,
+            required: true
+        },
+        disabled: {
+            type: Boolean,
+            default: false
+        },
+        priorityLocked: {
+            type: Boolean,
+            default: false
+        },
+        isDoneColumn: {
+            type: Boolean,
+            default: false
+        }
+    },
+    computed: {
+        lockChecked() {
+            return this.title.indexOf('Progress') !== -1;
+        }
+    },
+    methods: {
+        emitUpdate() {
+            this.$emit('update');
+        },
+        emitPriority(card) {
+            this.$emit('priority', card);
+        },
+        emitClear() {
+            this.$emit('clear');
+        }
+    },
+    template: `
+        <div class="col-12 col-lg-4">
+            <div class="border rounded p-3 bg-white h-100">
+                <div class="d-flex align-items-center justify-content-between mb-3" v-if="isDoneColumn">
+                    <h2 class="h5 mb-0">{{ title }}</h2>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" @click="emitClear" :disabled="cards.length === 0">Очистить</button>
+                </div>
+                <h2 class="h5 mb-3" v-else>{{ title }}</h2>
+                <div class="d-flex flex-column gap-3">
+                <note-card
+                    v-for="card in cards"
+                    :key="card.id"
+                    :card="card"
+                    :disabled="disabled"
+                    :lock-checked="lockChecked"
+                    @update="emitUpdate"
+                    @click.native="emitPriority(card)"
+                ></note-card>
+            </div>
+            </div>
+        </div>
     `
 });
 
 new Vue({
     el: '#app',
-    data() {
-        return {
-            columns: ['To Do', 'In Progress', 'Done'],
+    data: {
+        columns: {
             todo: [],
             progress: [],
-            done: [],
-            newCard: {
-                title: '',
-                items: [
-                    { text: '', done: false },
-                    { text: '', done: false },
-                    { text: '', done: false }
-                ]
-            }
-        };
-    },
-    mounted() {
-        this.load();
+            done: []
+        },
+        hasActivePriority: false
     },
     computed: {
         todoLocked() {
-            return this.progress.length >= 5;
-        },
-        canCreateCard() {
-            if (this.todo.length >= 3) {
-                return false;
-            }
-            if (!this.newCard.title.trim()) {
-                return false;
-            }
-            const filledItems = this.newCard.items.filter(
-                (item) => item.text && item.text.trim().length > 0
-            ).length;
-            return filledItems >= 3 && filledItems <= 5 && filledItems === this.newCard.items.length;
+            return this.columns.progress.length >= 5;
         }
     },
     methods: {
-        addItem() {
-            if (this.newCard.items.length >= 5) {
-                return;
-            }
-            this.newCard.items.push({ text: '', done: false });
-        },
-        removeItem(index) {
-            if (this.newCard.items.length <= 3) {
-                return;
-            }
-            this.newCard.items.splice(index, 1);
-        },
-        createCard() {
-            if (!this.canCreateCard) {
-                return;
-            }
-            const card = {
+        addCard(payload) {
+            this.columns.todo.push({
                 id: Date.now(),
-                title: this.newCard.title.trim(),
-                items: this.newCard.items.map((item) => ({
-                    text: item.text.trim(),
-                    done: false
-                })),
+                title: payload.title,
+                items: payload.items,
                 completedAt: null
-            };
-            this.todo.push(card);
-            this.newCard = {
-                title: '',
-                items: [
-                    { text: '', done: false },
-                    { text: '', done: false },
-                    { text: '', done: false }
-                ]
-            };
+            });
             this.save();
         },
         update() {
@@ -126,24 +211,24 @@ new Vue({
             this.save();
         },
         moveCards() {
-            this.todo = this.todo.filter((card) => {
+            this.columns.todo = this.columns.todo.filter((card) => {
                 const p = this.getProgress(card);
                 if (p === 1) {
                     this.finish(card);
-                    this.done.push(card);
+                    this.columns.done.push(card);
                     return false;
                 }
-                if (p >= 0.5 && this.progress.length < 5) {
-                    this.progress.push(card);
+                if (p >= 0.5 && this.columns.progress.length < 5) {
+                    this.columns.progress.push(card);
                     return false;
                 }
                 return true;
             });
 
-            this.progress = this.progress.filter((card) => {
+            this.columns.progress = this.columns.progress.filter((card) => {
                 if (this.getProgress(card) === 1) {
                     this.finish(card);
-                    this.done.push(card);
+                    this.columns.done.push(card);
                     return false;
                 }
                 return true;
@@ -159,32 +244,28 @@ new Vue({
             card.completedAt = new Date().toLocaleString();
         },
         clearDone() {
-            if (this.done.length === 0) {
+            if (this.columns.done.length === 0) {
                 return;
             }
-            if (!confirm('Очистить выполненное?')) {
+            if (!confirm('Очистить?')) {
                 return;
             }
-            this.done = [];
+            this.columns.done = [];
             this.save();
         },
+        setPriority() {
+        },
         save() {
-            const payload = {
-                todo: this.todo,
-                progress: this.progress,
-                done: this.done
-            };
-            localStorage.setItem('kanban', JSON.stringify(payload));
+            localStorage.setItem('notes', JSON.stringify(this.columns));
         },
         load() {
-            const raw = localStorage.getItem('kanban');
-            if (!raw) {
-                return;
+            const data = localStorage.getItem('notes');
+            if (data) {
+                this.columns = JSON.parse(data);
             }
-            const data = JSON.parse(raw);
-            this.todo = Array.isArray(data.todo) ? data.todo : [];
-            this.progress = Array.isArray(data.progress) ? data.progress : [];
-            this.done = Array.isArray(data.done) ? data.done : [];
         }
+    },
+    mounted() {
+        this.load();
     }
 });
