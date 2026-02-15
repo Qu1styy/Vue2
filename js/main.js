@@ -38,7 +38,7 @@ Vue.component('note-card', {
                         </label>
                     </li>
                 </ul>
-                <small v-if="card.completedAt" class="text-muted d-block mt-2">Completed: {{ card.completedAt }}</small>
+                <small v-if="card.completedAt" class="text-muted d-block mt-2">Готово: {{ card.completedAt }}</small>
             </div>
         </div>
     `
@@ -96,25 +96,21 @@ Vue.component('create-card', {
         }
     },
     template: `
-        <div class="row justify-content-center">
-            <div class="col-12 col-md-8 col-lg-6">
-                <form class="create-card" @submit.prevent="create">
-                    <div class="mb-2">
-                        <input v-model="title" type="text" class="form-control" placeholder="Заголовок">
-                    </div>
-                    <div class="mb-2" v-for="(item, index) in items" :key="index">
-                        <div class="input-group">
-                            <input v-model="item.text" type="text" class="form-control" placeholder="Пункт">
-                            <button type="button" class="btn btn-outline-secondary" @click="removeItem(index)" :disabled="items.length <= 3">−</button>
-                        </div>
-                    </div>
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary" :disabled="!canCreate">Создать</button>
-                        <button type="button" class="btn btn-outline-primary" @click="addItem" :disabled="items.length >= 5">Добавить пункт</button>
-                    </div>
-                </form>
+        <form class="create-card" @submit.prevent="create">
+            <div class="mb-2">
+                <input v-model="title" type="text" class="form-control" placeholder="Заголовок">
             </div>
-        </div>
+            <div class="mb-2" v-for="(item, index) in items" :key="index">
+                <div class="input-group">
+                    <input v-model="item.text" type="text" class="form-control" placeholder="Пункт">
+                    <button type="button" class="btn btn-outline-secondary" @click="removeItem(index)" :disabled="items.length <= 3">−</button>
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-outline-primary" @click="addItem" :disabled="items.length >= 5">Добавить пункт</button>
+                <button type="submit" class="btn btn-primary" :disabled="!canCreate">Создать</button>
+            </div>
+        </form>
     `
 });
 
@@ -143,7 +139,8 @@ Vue.component('board-column', {
     },
     computed: {
         lockChecked() {
-            return this.title.indexOf('Progress') !== -1;
+            const t = this.title.toLowerCase();
+            return t.includes('progress') || t.includes('процесс');
         }
     },
     methods: {
@@ -166,34 +163,38 @@ Vue.component('board-column', {
                 </div>
                 <h2 class="h5 mb-3" v-else>{{ title }}</h2>
                 <div class="d-flex flex-column gap-3">
-                <note-card
-                    v-for="card in cards"
-                    :key="card.id"
-                    :card="card"
-                    :disabled="disabled"
-                    :lock-checked="lockChecked"
-                    @update="emitUpdate"
-                    @click.native="emitPriority(card)"
-                ></note-card>
-            </div>
+                    <note-card
+                        v-for="card in cards"
+                        :key="card.id"
+                        :card="card"
+                        :disabled="disabled"
+                        :lock-checked="lockChecked"
+                        @update="emitUpdate"
+                        @click.native="emitPriority(card)"
+                    ></note-card>
+                </div>
             </div>
         </div>
     `
 });
 
-new Vue({
-    el: '#app',
-    data: {
-        columns: {
-            todo: [],
-            progress: [],
-            done: []
-        },
-        hasActivePriority: false
+Vue.component('app', {
+    data() {
+        return {
+            columns: {
+                todo: [],
+                progress: [],
+                done: []
+            },
+            hasActivePriority: false
+        };
     },
     computed: {
         todoLocked() {
-            return this.columns.progress.length >= 5;
+            if (this.columns.progress.length < 5) {
+                return false;
+            }
+            return this.columns.todo.some((card) => this.getProgress(card) >= 0.5);
         }
     },
     methods: {
@@ -247,7 +248,7 @@ new Vue({
             if (this.columns.done.length === 0) {
                 return;
             }
-            if (!confirm('Очистить?')) {
+            if (!confirm('Clear all completed cards?')) {
                 return;
             }
             this.columns.done = [];
@@ -267,5 +268,53 @@ new Vue({
     },
     mounted() {
         this.load();
-    }
+    },
+    template: `
+        <div>
+            <div class="mb-4">
+                <h1 class="mb-2">вью ту</h1>
+                <div class="row justify-content-center">
+                    <div class="col-12 col-md-8 col-lg-6">
+                        <div class="create-note">
+                            <create-card
+                                @create="addCard"
+                                v-if="!hasActivePriority"
+                            ></create-card>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <board-column
+                    title="Списки"
+                    :cards="columns.todo"
+                    :disabled="todoLocked"
+                    :priorityLocked="hasActivePriority"
+                    @update="update"
+                    @priority="setPriority"
+                ></board-column>
+
+                <board-column
+                    title="В процессе"
+                    :cards="columns.progress"
+                    :priorityLocked="hasActivePriority"
+                    @update="update"
+                    @priority="setPriority"
+                ></board-column>
+
+                <board-column
+                    title="Готово"
+                    :cards="columns.done"
+                    :disabled="true"
+                    :is-done-column="true"
+                    @clear="clearDone"
+                ></board-column>
+            </div>
+        </div>
+    `
+});
+
+new Vue({
+    el: '#app'
 });
