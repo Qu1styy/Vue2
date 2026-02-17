@@ -186,7 +186,8 @@ Vue.component('app', {
                 progress: [],
                 done: []
             },
-            hasActivePriority: false
+            hasActivePriority: false,
+            searchQuery: ''
         };
     },
     computed: {
@@ -195,9 +196,25 @@ Vue.component('app', {
                 return false;
             }
             return this.columns.todo.some((card) => this.getProgress(card) >= 0.5);
+        },
+        filteredTodo() {
+            return this.filterByTitle(this.columns.todo);
+        },
+        filteredProgress() {
+            return this.filterByTitle(this.columns.progress);
+        },
+        filteredDone() {
+            return this.filterByTitle(this.columns.done);
         }
     },
     methods: {
+        filterByTitle(cards) {
+            const q = this.searchQuery.trim();
+            if (!q) {
+                return cards;
+            }
+            return cards.filter((card) => card.title.includes(q));
+        },
         addCard(payload) {
             this.columns.todo.push({
                 id: Date.now(),
@@ -285,10 +302,19 @@ Vue.component('app', {
                 </div>
             </div>
 
+            <div class="mb-4">
+                <input
+                    v-model="searchQuery"
+                    type="text"
+                    class="form-control"
+                    placeholder="Поиск"
+                >
+            </div>
+
             <div class="row g-3">
                 <board-column
                     title="Списки"
-                    :cards="columns.todo"
+                    :cards="filteredTodo"
                     :disabled="todoLocked"
                     :priorityLocked="hasActivePriority"
                     @update="update"
@@ -297,7 +323,7 @@ Vue.component('app', {
 
                 <board-column
                     title="В процессе"
-                    :cards="columns.progress"
+                    :cards="filteredProgress"
                     :priorityLocked="hasActivePriority"
                     @update="update"
                     @priority="setPriority"
@@ -305,7 +331,7 @@ Vue.component('app', {
 
                 <board-column
                     title="Готово"
-                    :cards="columns.done"
+                    :cards="filteredDone"
                     :disabled="true"
                     :is-done-column="true"
                     @clear="clearDone"
